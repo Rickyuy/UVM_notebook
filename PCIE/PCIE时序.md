@@ -1,3 +1,4 @@
+# PCIE时序
 ![PCIE时序图](./image/pcie%E6%97%B6%E5%BA%8F%E5%9B%BE.png "PCIE时序图")
 - 在第一个时钟上升沿，FRAME#和IRDY#都为inactive，表明总线当前处于空闲状态。与此同时，某设备的GNT#信号处于active，表明总线总裁器已经选定当前设备为下一个initiator(可以理解为主机)。
 - 在第二个时钟上升沿，FRAME#被initiator拉低，表明新的事务（Transaction)已经开始。与此同时，地址和命令被依次发送到AD上，总线上面的所有其他设备（从机）都会锁存这些信息，并检查地址和命令是否与自己匹配。
