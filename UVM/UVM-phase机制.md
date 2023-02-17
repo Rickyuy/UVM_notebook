@@ -30,3 +30,5 @@
 - shutdown_phase
 - post_shutdown_phase
 实际上run_phase任务和上面细分的12个phase是并行的，即在start_of_simulation_phase任务执行以后，run_phase和reset_phase开始执行，而在shutdown_phase执行完成之后，需要等待run_phase执行完才可以进入extract_phase。它们的执行顺序关系可以参考下图：
+
+![Phase机制执行顺序](./image/Phase%E6%9C%BA%E5%88%B6%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F.png "Phase机制执行顺序")
