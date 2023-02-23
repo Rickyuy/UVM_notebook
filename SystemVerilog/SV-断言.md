@@ -70,5 +70,89 @@
 
 - and运算符
   
-and运算符用来连接两个事件(多为序列)，当两个事件均成功时匹配成功，需要注意的是两个事件必须有相同的起始点，但是可以有不同的结束点。举个简单的例子，(a##[2:4]b)and(a##5 c)在波形中可见，100ns处(a##[2:4]b)匹配成功，140ns处整个序列匹配成功，其他时间都是匹配失败的
+and运算符用来连接两个事件(多为序列)，当两个事件均成功时匹配成功，需要注意的是两个事件必须有相同的起始点，但是可以有不同的结束点。举个简单的例子，(a##[2:4]b)and(a##5 c)在波形中可见，100ns处(a##[2:4]b)匹配成功，140ns处整个序列匹配成功，其他时间都是匹配失败的。
 
+![and运算符](./image/and%E8%BF%90%E7%AE%97%E7%AC%A6.png "and运算符")
+
+> 注：and和&在断言中的区别和联系。a&b也是要a和b同时成立的，不过此式中a和b必须为表达式，匹配也只能在每一拍内进行；而a and b中的a、b既可以是表达式又可以是序列，是可以进行跨拍匹配的。例如(sig_a == 5) & (sig_b == 3)也可以写成(sig_a == 5) and (sig_b == 3)，但是(a ##[2:4]b)and(a##5 c)不可以写作(a##[2:4]b)&(a##5 c)。
+
+- or运算符
+  
+and运算符用来连接两个事件(多为序列)，当两个事件任一匹配成功则整体成功，与|的区别和之前类似，or可以连接两个表达式或是两个序列，|只能连接两个表达式。
+
+- intersect运算符
+
+intersect和and有一些类似，都是连接两个事件，两个事件均成功整个匹配才成功。不过intersect多了一个条件，那就是两个事件必须在同一时刻结束(and已经需要保证两个事件同一时刻开始)，换句话说a intersect b能匹配成功，a、b两个序列的长度必须相等。
+
+- within运算符
+
+a within b含义是在事件b(序列b)匹配期间，事件a(序列a)至少出现1次则匹配成功，否则匹配失败。
+
+- throughout运算符
+
+throughout运算符和intersect有些接近，不过区别在于throughout必须连接一个表达式和一个序列即reg throughout seq，含义是在seq匹配起始到结束期间，req都必须成立。
+
+## 5、内建函数
+- $rose
+
+$rose()函数就是上升沿检测，匹配规则是信号的当拍值为1上拍数据为0。
+
+- $fell
+
+$fell()函数和$rose函数刚好相反，是下降沿检测。
+
+- $change
+  
+$fell函数和$rose函数的结合体，当拍采样值与上一拍不一致则匹配成功。
+
+- $stable
+  
+$stable和$change刚好相反，信号当拍采样值与上一拍一样则匹配成功。
+
+- $onehot(a)：
+
+任意时钟沿，表达式a都只有1bit为高；
+
+- $onehot0(a)：
+
+任意时钟沿，表达式a都只有1bit为高或这均为低电平；
+
+- $isunkown(a)：
+
+任意时钟沿，表达式a任意位是否有X态或者Z态，如果有则匹配，没有X态或Z态则报错；注意这个函数我们一般时~$isunkown(a)这样使用，在有X态或Z态时候我们希望报错出来；
+
+- $countones(a)：
+
+返回表达式中高电平的bit数量；
+
+## 6、应用与实践
+
+下面是实践中遇到的一些问题：
+
+①编译后断言没有运行
+
+在home目录下的.cshrc中配置仿真环境
+```markdown
+  setenv SIM_TOOL VCSM
+```
+
+②在testbench.sv中加入了interface来进行断言，但是将interface单独作为一个sv文件无法包含进去
+解决方法1：
+```
+1、在testbench目录下新建一个文件夹interface
+2、在这个文件夹下创建interface的sv文件
+3、修改testbench目录下的vfiles文件，增加以下代码：
+    +incdir+$SYS_TOP/testbench/interface
+    $SYS_TOP/testbench/interface/clk_checker_if.sv
+```
+
+③在testbench.sv中添加interface并bind module后，可以在verdi中看到u_top层下面的interface并可以查看相关波形。如下图所示：
+
+![verdi1](./image/verdi1.png "verdi1")
+
+但是如果将interface的define从testbench.sv中移植到其他文件，则无法在verdi中找到interface并查看波形。
+
+解决方法：修改sim文件夹下的verdi.f文件，增加以下指令：
+```
+  -f 工作目录/database/soc/hw/chips/everest2/asic/full_chip/testbench/vfiles
+```
