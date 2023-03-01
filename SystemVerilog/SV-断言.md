@@ -135,6 +135,33 @@ a |=> b和前者唯一的区别就是，|=>是从下一拍(##1)开始检查，�
 
 ## 7、应用与实践
 
+验证时钟的demo:
+接口中定义断言
+```verilog
+always @(posedge clk) begin
+  clk_posedge_prv_time = clk_posedge_time;
+  clk_posedge_time = $realtime;
+  if(clk_posedge_time > clk_posedge_prv_time) begin
+    clk_period_ns = clk_posedge_time - clk_posedge_prv_time;
+    clk_freq = 1/clk_period_ns*1000;
+  end
+end
+
+assert_clk_check: assert property(
+  @(posedge clk)
+  (clk_freq - ref_clk_freq) < ref_error
+)
+else
+  $error("%m @ %t : The freq is wrong", $time);
+```
+在testbench中绑定接口
+```verilog
+bind u_top clk_checker_if sva_clk_checker(
+  .clk (u_top.X38P4M_CLK) ,
+  .n_rst (u_top.SYSRSTB )
+);
+```
+
 下面是实践中遇到的一些问题：
 
 ①编译后断言没有运行
