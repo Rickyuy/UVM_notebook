@@ -135,3 +135,39 @@ config_db的set和get函数都有四个参数，这两个函数的第三个参�
 >   `uvm_fatal("my_driver", "var must be set!!!")
 >endfunction
 >```
+
+## 4、应用与实践
+
+声明了一个接口clock_if:
+```
+interface clock_if();
+    logic clk;
+endinterface
+```
+在testbench中例化了这个接口，并将clk赋值给了一个wire类型的变量
+```
+wire X38P4M_CLK
+clock_if u_clk();
+assign X38P4M_CLK = u_clk.clk;
+```
+
+但是没有驱动该clk，所以定义了一个类uvs_clock，它继承于uvm组件，因为类中只能使用virtual interface传参，所以定义如下：
+```
+ vitual clockif m_vif;
+```
+两个接口直接使用config_db进行传参，testbench中的范例如下所示：
+```
+uvm_config_db#(virtual clock_if)::set(uvm_root::get(), "uvm_test_top.u0_env.sys_clk", "m_vif", testbench.u_clk);
+```
+uvs_clock类中使用范例如下所示
+```
+uvm_config_db#(virtual clock_if)::get(this, "", "m_vif", m_vif);
+```
+但是uvs_clock中时钟是根据输入参数m_freq进行配置的。所以如何将m_freq参数传入？如何实例化这个组件。
+
+在base_env中实例化该组件并传入需要产生的时钟频率：
+```
+uvs_clock sys_clk;
+sys_clk = uvs_clock::type_id::create("sys_clk", this);
+uvm_config_db#(real)::set(this, this.sys_clk.get_name(), "m_freq", 38.4);
+```
