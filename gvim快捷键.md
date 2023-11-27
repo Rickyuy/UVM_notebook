@@ -13,3 +13,9 @@
 |全局替换|: %s/string1/string2/g|
 |全局替换且一一确定|: %s/string1/string2/c|
 |筛选关键字的行|:v/string/d|
+
+全局搜索并跳转：
+- 只搜索当前文件    vim /main/ % | copen
+- 只搜索当前目录    vim /main/ * | copen
+- 搜索上级目录下，并递归    vim /main/ ../** | copen
+- 可以在多个路径中搜索  vim /main/ path1/** path2/** | copen
